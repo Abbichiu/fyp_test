@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('lib-background.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1;
+        }
+
+        .login-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            width: 350px;
+            position: relative;
+            z-index: 2;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #444;
+            font-size: 24px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 90%;
+            padding: 15px;
+            margin: 12px 0;
+            border: 2px solid #d1d1d1;
+            border-radius: 8px;
+            font-size: 18px;
+            transition: border-color 0.3s;
+        }
+
+        .toggle-password-login {
+            position: absolute;
+            right: 1px; 
+            top: 50%; 
+            transform: translateY(-210%); 
+            background: none; 
+            border: none; 
+            color: #1e88e5;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #6c757d;
+            outline: none;
+        }
+
+        input[type="submit"], .google-login-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        input[type="submit"]:hover, .google-login-button:hover {
+            background-color: #218838;
+        }
+
+        .google-login-button {
+            background-color: #4285F4;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .google-login-button img {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .return-button {
+            background-color: #62A4F7;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .return-button:hover {
+            background-color: #0056b3;
+        }
+
+        .signup-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            cursor: pointer;
+            color: #007bff;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .login-container {
+                padding:  10px; /* Further reduced padding for very small screens */
+            }
+
+            h2 {
+                font-size: 18px; /* Smaller font size for very small screens */
+            }
+
+            input[type="text"], input[type="password"] {
+                font-size: 14px; /* Smaller font size for inputs */
+            }
+
+            input[type="submit"], .google-login-button, .return-button {
+                font-size: 14px; /* Smaller font size for buttons */
+            }
+
+            .toggle-password-login {
+                font-size: 12px; /* Smaller font size for toggle buttons */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Library Login</h2>
+        <div class="error-message" id="error-message"></div>
+        <form id="login-form" onsubmit="return handleLogin(event)">
+            <input type="text" id="login-username" placeholder="Username" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button type="button" class="toggle-password-login" id="togglePassword">Show</button>
+            <input type="submit" value="Login">
+        </form>
+        <button class="google-login-button" id="google-login">
+            <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Google Logo"/>
+            Login with Google
+        </button>
+        <span class="signup-link" onclick="showSignup()">Don't have an account? Register Here.</span>
+        <button class="return-button" onclick="window.location.href='index.html'">Return to Home</button>
+    </div>
+
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            fetch('http://localhost:9875/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Login failed: ' + response.statusText + ' access / User Not Found! ');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Store the token in localStorage
+                localStorage.setItem('token', data.token);
+                // Redirect based on role
+                window.location.href = data.redirect;
+            })
+            .catch(error => {
+                document.getElementById('error-message').innerText = error.message;
+            });
+        }
+
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('login-password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? 'Show' : 'Hide';
+        });
+
+        function showSignup() {
+            window.location.href = 'signup.html'; // Redirect to signup.html
+        }
+
+        // Google Login function
+        document.getElementById('google-login').addEventListener('click', () => {
+            window.location.href = 'http://localhost:9875/auth/google';
+        });
+    </script>
+</body>
+</html>
